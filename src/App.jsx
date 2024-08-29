@@ -1,15 +1,47 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import Places from './components/Places.jsx';
 import { AVAILABLE_PLACES } from './data.js';
 import Modal from './components/Modal.jsx';
 import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
+import { sortPlacesByDistance } from './loc.js'
 
 function App() {
   const modal = useRef();
   const selectedPlace = useRef();
+  const [available, setAvailablePlaces]  = useState([]);
   const [pickedPlaces, setPickedPlaces] = useState([]);
+  
+  // does not return a value
+  // two args - fx that wraps side effect code
+  // callback executed AFTER every component execution
+
+  useEffect(() => {
+    // side effect because not related to returning renderable comp
+    // does not finish instantly; 
+    navigator.geolocation.getCurrentPosition((position) => {
+    // fx executed once location fetched
+    const sortedPlaces = sortPlacesByDistance(
+      AVAILABLE_PLACES,
+      position.coords.latitude,
+      position.coords.longitude
+    );
+
+    // updating state will have react re-ex comp
+    // which will pull loc again and update state again
+    // infinite loop
+    setAvailablePlaces(sortedPlaces);
+    // array of dependencies as second arg
+    // define array -- react looks at dependencies
+    // if dependency values change
+    // empty array will remain unchanged so
+    // effect isn't re-executed; executed once 
+    // after App function executes
+    // if dependencies omitted, useEffect will re-execute
+    // after every App render
+    }, []);
+  });
 
   function handleStartRemovePlace(id) {
     modal.current.open();
@@ -64,6 +96,7 @@ function App() {
         <Places
           title="Available Places"
           places={AVAILABLE_PLACES}
+          fallbackText="Sorting places by distance...'"
           onSelectPlace={handleSelectPlace}
         />
       </main>
