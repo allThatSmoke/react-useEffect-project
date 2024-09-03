@@ -7,16 +7,23 @@ import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
 import { sortPlacesByDistance } from './loc.js'
 
+// move out of App fx so it only runs once
+// localStorage runs synchronously -- no need to useEffect
+const storedIds = JSON.parse(localStorage.getItem('selectedPlaces')) || [];
+// returns array of place objects based on array of stored Ids
+const storedPlaces = storedIds.map((id) => AVAILABLE_PLACES.find((place) => place.id === id))
+
 function App() {
   const modal = useRef();
   const selectedPlace = useRef();
   const [available, setAvailablePlaces]  = useState([]);
-  const [pickedPlaces, setPickedPlaces] = useState([]);
+  // used storedplaces as init value
+  const [pickedPlaces, setPickedPlaces] = useState(storedPlaces);
   
+    
   // does not return a value
   // two args - fx that wraps side effect code
   // callback executed AFTER every component execution
-
   useEffect(() => {
     // side effect because not related to returning renderable comp
     // does not finish instantly; 
@@ -40,8 +47,7 @@ function App() {
     // after App function executes
     // if dependencies omitted, useEffect will re-execute
     // after every App render
-    }, []);
-  });
+    })}, []);
 
   function handleStartRemovePlace(id) {
     modal.current.open();
@@ -60,6 +66,24 @@ function App() {
       const place = AVAILABLE_PLACES.find((place) => place.id === id);
       return [place, ...prevPickedPlaces];
     });
+
+    // store data is not directly related to rendering app
+    // no updates to state
+    // can't use hook inside nested functions
+    // hooks must be used directly in function root level
+    // no update to state -- so no inf loop
+    const storedIds = JSON.parse(localStorage.getItem('selectedPlaces')) || [];
+    
+    // check to ensure id doesn't already exist in storage
+    if (storedIds.indexOf(id) === -1){
+      // built-into browser -- store data in browser
+      // first arg - string identifier
+      // second arg - string val that should be stored
+      localStorage.setItem('selectedPlaces', JSON.stringify([id, ...storedIds]));
+      //console.log(storedIds);
+    }
+
+
   }
 
   function handleRemovePlace() {
@@ -67,6 +91,9 @@ function App() {
       prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
     );
     modal.current.close();
+    // retreive stored ids
+    const storedIds = JSON.parse(localStorage.getItem('selectedPlaces')) || [];
+    localStorage.setItem('selectedPlaces', JSON.stringify(storedIds.filter((id) => id !== selectedPlace.current)))
   }
 
   return (
