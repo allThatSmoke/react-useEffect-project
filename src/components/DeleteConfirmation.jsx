@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 
+import ProgressBar from './ProgressBar';
+
 export default function DeleteConfirmation({ onConfirm, onCancel }) {
+  
   // modal closes automatically aft 3 sec
   useEffect(() => {
     // need to get rid of timer when DeleteConfirmation
@@ -37,6 +40,7 @@ export default function DeleteConfirmation({ onConfirm, onCancel }) {
           Yes
         </button>
       </div>
+      <ProgressBar />
     </div>
   );
 }
